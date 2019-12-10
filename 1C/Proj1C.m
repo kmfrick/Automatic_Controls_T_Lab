@@ -1,6 +1,6 @@
-%% Project 1C
+%% Progetto 1C - Link flessibile
 % Corradini, di Nuzzo, Frick, Ragazzini, Zappacosta
-% Group A
+% Gruppo A
 
 % x_dot=f(x,u,t)
 
@@ -11,20 +11,20 @@
 
 % y = x_1
 
-%% Project specs:
-% zero steady state error with a step reference signal of 5
-% Mf > 45 deg
-% S_% < 1%
-% T_a1 = 0.8 (0.4 optionally)
-% Noise reduction of about 20 times
-% Noise characteristics: omega_n > 200 [rad/s], amplitude=0.05
+%% Specifiche
+% Errore a regime nullo con ingresso $w = A sca(t)$
+% Margine di fase $\phi_m > 45^{\circ}$
+% Sovraelongazione percentuale massima $S_\% < 1 \%$
+% Tempo di assestamento all'1\% $T_{a1} = 0.8$ (opzionalmente $0.4$)
+% Abbattimento del rumore di 20 volte
+% Caratteristiche del rumore: $\omega_n > 200 rad/s, A_n = 0.05$
 
 omega_n = 200;
 A_n = 0.05;
 B_n = 20;
 y_ref = pi/2;
 
-% System parameters definition
+% Definizione dei parametri del sistema
 
 g = 9.81;
 K = 3;
@@ -44,7 +44,7 @@ x_4_ref = 0;
 u_ref = M * g * L;
 S_max = 0.01;
 
-% Linearized matrices
+% Matrici linearizzate
 A = [0      1       0       0;
     (-K/J)  (-ro/J) K/J   ro/J;
     0       0       0       1;
@@ -53,17 +53,17 @@ B = [0; 0; 0; 1/I];
 C = [1 0 0 0];
 D = 0;
 
-% Transfer function definition
+% Definizione funzione di trasferimento
 
 s=tf('s');
 [N,D]=ss2tf(A,B,C,D);
 G=tf(N,D);
 
-% Definition of Bode diagram frequency range
+% Definizione dell'intervallo di frequenze del diagramma di Bode
 omega_plot_min=10^(-2);
 omega_plot_max=10^5;
 
-% Plot Bode diagram of open-loop system
+% Diagramma di Bode del sistema in anello aperto
 figure;
 patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n,-B_n,100,100],'red','FaceAlpha',0.3,'EdgeAlpha',0);
 hold on; 
@@ -71,19 +71,21 @@ hold on;
 margin(Mag, phase, omega); grid on;
 
 xi = sqrt(log(S_max)^2/(pi^2+log(S_max)^2));
-% The overshoot request maps into a phase margin request:
-phi_m=xi*100;
-% Mf>83% this is a stronger request that the robust one (Mf>45%),
-% so we will only take this into account.
+% Il requisito sulla sovraelongazione si traduce in un requisito sul
+% margine di fase che è maggiore di quello specificato, quindi si prenderà 
+% in considerazione solo questo.
+phi_m = xi * 100;
 
-% Define regulator
-% Zero steady state error: requires that L has a pole in the origin
-alpha_lead = 0.5;
+
+% Definizione del regolatore
+% Per avere errore a regime nullo è necessario che $L(s)$ abbia un polo
+% nell'origine
+alpha_lead = 0.5;   
 T_lead = 3e-2;
 gain = 3.3e-1;
-R_s = s * gain /  (1 + 1e-6 * s);
+R_s = s * gain;
 R_lead = (1  + T_lead * s) / (1 + alpha_lead * T_lead * s);
-R_d = R_lead;
+R_d = R_lead /  (1 + 1e-6 * s);
 R = R_s * R_d;
 L = R * G;
 figure;
@@ -93,7 +95,7 @@ patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n,-B_n,100,100],'red',
 margin(Mag, phase, omega);  
 grid on;
 
-% Plot step response of regulated closed-loop system
+% Risposta in frequenza del sistema in anello chiuso con regolatore
 
 F = L / (1 + L);
 figure;
