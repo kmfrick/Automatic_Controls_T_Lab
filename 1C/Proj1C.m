@@ -69,12 +69,6 @@ zpk(G)
 omega_plot_min=10^(-2);
 omega_plot_max=10^5;
 
-%% Diagramma di Bode del sistema in anello aperto
-figure;
-patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.3,'EdgeAlpha',0);
-hold on; 
-[Mag, phase, omega] = bode(G, {omega_plot_min, omega_plot_max});
-margin(Mag, phase, omega); grid on;
 
 %% Requisiti sul margine di fase
 % Il requisito sulla sovraelongazione si traduce in un requisito sul
@@ -88,22 +82,30 @@ phi_m = xi * 100
 %
 % # Per avere errore a regime nullo è necessario che $L(s)$ abbia un polo
 % nell'origine, ma $G(s)$ ne ha due che abbassano di molto la fase: 
-% si progetta quindi $R(s)$ in modo che abbia uno zero nell'origine.
+% si progetta quindi $R(s)$ in modo che abbia uno zero vicino all'origine.
 % # La fase è molto negativa, quindi si usa una rete anticipatrice
-% $R_{lead}$ per alzare la fase a $\omega \approx 12.9$.
+% $R_{lead}$ per alzare la fase a $\omega_c \approx 12.9$.
 % # Si inserisce poi un polo a sei decadi dall'origine per garantire la
 % fisica realizzabilità.
 %
 alpha_lead = 0.2;   
 T_lead = 3e-2;
-gain = 2.4e-3;
+gain = 8e-3;
 R_s = gain;
 R_lead = (1  + T_lead * s) / (1 + alpha_lead * T_lead * s);
-R_d = (s * 1e2 + 1) * R_lead /  (1 + 1e-6 * s);
+R_d = (s * 49 + 1) * R_lead /  (1 + 1e-6 * s);
 R = R_s * R_d;
 L_ = R * G;
-zpk(R)
-zpk(L_)
+F = L_ / (1 + L_);
+
+%% Diagramma di Bode del sistema in anello aperto
+%figure;
+%patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.3,'EdgeAlpha',0);
+%hold on; 
+%[Mag, phase, omega] = bode(G, {omega_plot_min, omega_plot_max});
+%margin(Mag, phase, omega); grid on;
+
+%% Diagramma di Bode del sistema con regolatore
 figure;
 hold on;
 patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.3,'EdgeAlpha',0);
@@ -111,13 +113,15 @@ patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],
 margin(Mag, phase, omega);  
 grid on;
 
-%% Risposta in frequenza del sistema in anello chiuso con regolatore
+%% Risposta allo scalino del sistema in anello chiuso con regolatore
 % Il sistema rispetta sia le specifiche sulla sovraelongazione sia quelle
 % sul tempo di assestamento all'1%.
-F = L_ / (1 + L_);
 figure;
 hold on;
 step(F);
+
+stepinfo(F, 'SettlingTimeThreshold',0.01)
+
 figure;
 [Mag, phase, omega] = bode(L_, {omega_plot_min, omega_plot_max});
 margin(Mag, phase, omega);  
