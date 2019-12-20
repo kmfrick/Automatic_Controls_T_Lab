@@ -51,37 +51,47 @@ omega_plot_max=10^5;
 %% Requisiti sul margine di fase
 xi = sqrt(log(S_max)^2/(pi^2+log(S_max)^2));
 phi_m = xi * 100;
+omega_c_opt = 460 / (phi_m * T_a0);
+omega_c_stand = 460 / (phi_m * T_a1);
 
 %% Definizione del regolatore
 gain = 3.4e-2;
 R_s = gain;
 T_lead_1 = 17.42;
-alpha_lead_1 = 8.2e-4;
+alpha_lead_1 = 5.741e-5;
 T_lead_2 = 0.05;
-alpha_lead_2 = 0.02;
+alpha_lead_2 = 0.286;
 R_lead_1 = (1  + T_lead_1 * s) / (1 + alpha_lead_1 * T_lead_1 * s);
 R_lead_2 = (1  + T_lead_2 * s) / (1 + alpha_lead_2 * T_lead_2 * s);
 R = R_s * R_lead_1 * R_lead_2;
-
-L_ = R * G;
+R_no_opt = 0.23 * s / (1 + s * 1e-5);
+L_ = R_no_opt * G;
 F = L_ / (1 + L_);
 
 %% Diagramma di Bode del sistema in anello aperto
 figure;
-patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.3,'EdgeAlpha',0);
-hold on; 
+hold on;
+patch([omega_plot_min,omega_c_opt,omega_c_opt, omega_plot_min],[0, 0, -300, -300],'green','FaceAlpha',0.3,'EdgeAlpha',0);
+patch([omega_plot_min,omega_c_stand,omega_c_stand, omega_plot_min],[0, 0, -300, -300],'green','FaceAlpha',0.5,'EdgeAlpha',0);
+patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.5,'EdgeAlpha',0);
 [Mag, phase, omega] = bode(G, {omega_plot_min, omega_plot_max});
 margin(Mag, phase, omega); grid on;
+patch([omega_c_stand,omega_n, omega_n, omega_c_stand], [-180+phi_m,-180+phi_m, -360, -360], 'blue','FaceAlpha',0.5,'EdgeAlpha',0);
+
 
 %% Diagramma di Bode del sistema con regolatore
 figure;
 hold on;
-patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.3,'EdgeAlpha',0);
+patch([omega_plot_min,omega_c_opt,omega_c_opt, omega_plot_min],[0, 0, -200, -200],'green','FaceAlpha',0.3,'EdgeAlpha',0);
+patch([omega_plot_min,omega_c_stand,omega_c_stand, omega_plot_min],[0, 0, -200, -200],'green','FaceAlpha',0.5,'EdgeAlpha',0);
+patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.5,'EdgeAlpha',0);
 [Mag, phase, omega] = bode(L_, {omega_plot_min, omega_plot_max});
 margin(Mag, phase, omega);  
 grid on;
+patch([omega_c_stand,omega_n, omega_n, omega_c_stand], [-180+phi_m,-180+phi_m, -360, -360], 'blue','FaceAlpha',0.5,'EdgeAlpha',0);
 
 %% Risposta allo scalino del sistema in anello chiuso con regolatore
+step(F)
 stepinfo(F, 'SettlingTimeThreshold',0.01)
 
 %% Simulink
