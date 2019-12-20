@@ -6,26 +6,6 @@
 
 format compact;
 
-%% Descrizione e requisiti del sistema
-% Nella nuova applicazione della azienda che commissiona il progetto 
-% si prevede di utilizzare una struttura meccanica particolarmente leggera. 
-% Questa però presenta il problema di una flessibilità non trascurabile 
-% intrinseca nei componenti meccanici utilizzati. 
-% Ciò rende difficile il posizionamento dell’estremità non attuata in una 
-% posizione fissa desiderata.
-%
-% Per l’applicazione che l’azienda ha in mente si devono rispettare per il 
-% sistema linearizzato determinate caratteristiche:
-%
-% # Errore a regime nullo con riferimento a gradino con ampiezza $w(t) = W sca(t)$.
-% # Per garantire una certa robustezza del sistema si deve avere un margine di fase $\phi_m \geq 45^\circ$.
-% # Il sistema può accettare una sovraelongazione percentuale al massimo dell’1\% : $S\% \leq 1\%$.
-% # Tempo di assestamento all'1\% $T_{a1} = 0.8$ (opzionalmente 0.4).
-% # Abbattimento del rumore di 20 volte.
-%
-%
-% Il rumore si fa sentire a $\omega_n > 200 rad/s$ con ampiezza $A_n = 0.05$.
-
 %% Definizione dei parametri del sistema
 g = 9.81;
 K = 3;
@@ -69,30 +49,10 @@ omega_plot_min=10^(-2);
 omega_plot_max=10^5;
 
 %% Requisiti sul margine di fase
-% Il requisito sulla sovraelongazione si traduce in un requisito sul
-% margine di fase che è maggiore di quello specificato, quindi si prenderà 
-% in considerazione solo questo.
 xi = sqrt(log(S_max)^2/(pi^2+log(S_max)^2));
-phi_m = xi * 100
+phi_m = xi * 100;
 
 %% Definizione del regolatore
-%
-% # Per avere errore a regime nullo è necessario che $L(s)$ abbia un polo
-% nell'origine, ma $G(s)$ ne ha due, che inoltre abbassano di molto la fase: 
-% si progetta quindi $R(s)$ in modo che abbia uno zero vicino all'origine
-% che cancelli il polo;
-% # Ci si serve di due reti anticipatrici, una
-% con punto medio in $\omega_1 = 1/ (T_1 \sqrt{\alpha_1}) \approx 5 \cdot 10^{-1}$
-% e un'altra con punto medio in $\omega_2 = 1/ (T_2 \sqrt{\alpha_2})
-% \approx 7 \cdot 10^{-3}$;
-% # La prima rete anticipatrice ha una larghezza di banda di circa una 
-% decade, uno zero a $\omega_{z1} \approx -0.06$ e un polo a $omega_{p1}
-% \approx -70$.
-% # La seconda rete anticipatrice ha una larghezza di banda di circa tre
-% decadi, uno zero a $\omega_{z2} \approx -20$ e un polo a $omega_{p2}
-% \approx -10^{-3}$.
-%
-
 gain = 3.4e-2;
 R_s = gain;
 T_lead_1 = 17.42;
@@ -122,13 +82,9 @@ margin(Mag, phase, omega);
 grid on;
 
 %% Risposta allo scalino del sistema in anello chiuso con regolatore
-% Il sistema rispetta sia le specifiche sulla sovraelongazione sia quelle
-% sul tempo di assestamento all'1%.
 stepinfo(F, 'SettlingTimeThreshold',0.01)
 
 %% Simulink
-% Il sistema non linearizzato è stabile per valori dell'ingresso $w$ minori
-% di $W/8 sca(t)$
 w_lin = W;
 lin_sim = sim('Simul1C');
 w_nonlin = W/8;
@@ -139,14 +95,21 @@ y_nonlin = nonlin_sim.get('y');
 
 figure;
 hold on;
-xlim([0 100]);
+xlim([0 4]);
 plot (y_lin);
 title("Linearized system - step response with w = W");
 hold off;
 
 figure;
 hold on;
-xlim([0 200]);
+xlim([0 4]);
+plot (y_nonlin);
+title("Non linearized system - step response with w = W/8");
+hold off;
+
+figure;
+hold on;
+xlim([0 80]);
 plot (y_nonlin);
 title("Non linearized system - step response with w = W/8");
 hold off;
