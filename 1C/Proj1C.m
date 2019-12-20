@@ -2,30 +2,31 @@
 %%
 % Corradini, di Nuzzo, Frick, Ragazzini, Zappacosta
 % Gruppo A
-
-% x_dot=f(x,u,t)
-
-% x_dot_1 = x_2;
-% x_dot_2 = (-M g L sin (x1) - K (x_1 - x_3) - ro (x_2 - x_4)) / J
-% x_dot_3 = x_4
-% x_dot_4 = (K(x_1 - x_2) + ro (x_2 - x_4) + u) / I
-
-% y = x_1
+%
 
 format compact;
 
-%% Specifiche
+%% Descrizione e requisiti del sistema
+% Nella nuova applicazione della azienda che commissiona il progetto 
+% si prevede di utilizzare una struttura meccanica particolarmente leggera. 
+% Questa però presenta il problema di una flessibilità non trascurabile 
+% intrinseca nei componenti meccanici utilizzati. 
+% Ciò rende difficile il posizionamento dell’estremità non attuata in una 
+% posizione fissa desiderata.
 %
-% # Errore a regime nullo con ingresso $w = A sca(t)$
-% # Margine di fase $\phi_m > 45^{\circ}$
-% # Sovraelongazione percentuale massima $S_\% < 1 \%$
-% # Tempo di assestamento all'1\% $T_{a1} = 0.8$ (opzionalmente $0.4$)
-% # Abbattimento del rumore di 20 volte
-% # Caratteristiche del rumore: $\omega_n > 200 rad/s, A_n = 0.05$
+% Per l’applicazione che l’azienda ha in mente si devono rispettare per il 
+% sistema linearizzato determinate caratteristiche:
 %
+% # Errore a regime nullo con riferimento a gradino con ampiezza $w(t) = W sca(t)$.
+% # Per garantire una certa robustezza del sistema si deve avere un margine di fase $\phi_m \geq 45^\circ$.
+% # Il sistema può accettare una sovraelongazione percentuale al massimo dell’1\% : $S\% \leq 1\%$.
+% # Tempo di assestamento all'1\% $T_{a1} = 0.8$ (opzionalmente 0.4).
+% # Abbattimento del rumore di 20 volte.
+%
+%
+% Il rumore si fa sentire a $\omega_n > 200 rad/s$ con ampiezza $A_n = 0.05$.
 
 %% Definizione dei parametri del sistema
-
 g = 9.81;
 K = 3;
 ro = 0.2;
@@ -44,7 +45,7 @@ x_4_ref = 0;
 u_ref = M * g * L;
 S_max = 0.01;
 omega_n = 200;
-A_n = 0.05;
+A_n = 0.05 * pi / 180;
 B_n = 20;
 B_n_dB = 20 * log(20) / log(10);
 y_ref = pi/2;
@@ -59,16 +60,13 @@ C = [1 0 0 0];
 D = 0;
 
 %% Definizione funzione di trasferimento
-
 s=tf('s');
 [N,D]=ss2tf(A,B,C,D);
 G=tf(N,D);
-zpk(G)
 
 %% Definizione dell'intervallo di frequenze del diagramma di Bode
 omega_plot_min=10^(-2);
 omega_plot_max=10^5;
-
 
 %% Requisiti sul margine di fase
 % Il requisito sulla sovraelongazione si traduce in un requisito sul
@@ -77,33 +75,43 @@ omega_plot_max=10^5;
 xi = sqrt(log(S_max)^2/(pi^2+log(S_max)^2));
 phi_m = xi * 100
 
-
 %% Definizione del regolatore
 %
 % # Per avere errore a regime nullo è necessario che $L(s)$ abbia un polo
-% nell'origine, ma $G(s)$ ne ha due che abbassano di molto la fase: 
-% si progetta quindi $R(s)$ in modo che abbia uno zero vicino all'origine.
-% # La fase è molto negativa, quindi si usa una rete anticipatrice
-% $R_{lead}$ per alzare la fase a $\omega_c \approx 12.9$.
-% # Si inserisce poi un polo a sei decadi dall'origine per garantire la
-% fisica realizzabilità.
+% nell'origine, ma $G(s)$ ne ha due, che inoltre abbassano di molto la fase: 
+% si progetta quindi $R(s)$ in modo che abbia uno zero vicino all'origine
+% che cancelli il polo;
+% # Ci si serve di due reti anticipatrici, una
+% con punto medio in $\omega_1 = 1/ (T_1 \sqrt{\alpha_1}) \approx 5 \cdot 10^{-1}$
+% e un'altra con punto medio in $\omega_2 = 1/ (T_2 \sqrt{\alpha_2})
+% \approx 7 \cdot 10^{-3}$;
+% # La prima rete anticipatrice ha una larghezza di banda di circa una 
+% decade, uno zero a $\omega_{z1} \approx -0.06$ e un polo a $omega_{p1}
+% \approx -70$.
+% # La seconda rete anticipatrice ha una larghezza di banda di circa tre
+% decadi, uno zero a $\omega_{z2} \approx -20$ e un polo a $omega_{p2}
+% \approx -10^{-3}$.
 %
-alpha_lead = 0.2;   
-T_lead = 3e-2;
-gain = 8e-3;
+
+gain = 3.4e-2;
 R_s = gain;
-R_lead = (1  + T_lead * s) / (1 + alpha_lead * T_lead * s);
-R_d = (s * 49 + 1) * R_lead /  (1 + 1e-6 * s);
-R = R_s * R_d;
+T_lead_1 = 17.42;
+alpha_lead_1 = 8.2e-4;
+T_lead_2 = 0.05;
+alpha_lead_2 = 0.02;
+R_lead_1 = (1  + T_lead_1 * s) / (1 + alpha_lead_1 * T_lead_1 * s);
+R_lead_2 = (1  + T_lead_2 * s) / (1 + alpha_lead_2 * T_lead_2 * s);
+R = R_s * R_lead_1 * R_lead_2;
+
 L_ = R * G;
 F = L_ / (1 + L_);
 
 %% Diagramma di Bode del sistema in anello aperto
-%figure;
-%patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.3,'EdgeAlpha',0);
-%hold on; 
-%[Mag, phase, omega] = bode(G, {omega_plot_min, omega_plot_max});
-%margin(Mag, phase, omega); grid on;
+figure;
+patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.3,'EdgeAlpha',0);
+hold on; 
+[Mag, phase, omega] = bode(G, {omega_plot_min, omega_plot_max});
+margin(Mag, phase, omega); grid on;
 
 %% Diagramma di Bode del sistema con regolatore
 figure;
@@ -116,15 +124,30 @@ grid on;
 %% Risposta allo scalino del sistema in anello chiuso con regolatore
 % Il sistema rispetta sia le specifiche sulla sovraelongazione sia quelle
 % sul tempo di assestamento all'1%.
-figure;
-hold on;
-step(F);
-
 stepinfo(F, 'SettlingTimeThreshold',0.01)
 
-figure;
-[Mag, phase, omega] = bode(L_, {omega_plot_min, omega_plot_max});
-margin(Mag, phase, omega);  
-grid on;
+%% Simulink
+% Il sistema non linearizzato è stabile per valori dell'ingresso $w$ minori
+% di $W/8 sca(t)$
+w_lin = W;
+lin_sim = sim('Simul1C');
+w_nonlin = W/8;
+nonlin_sim = sim('NonLin1C');
 
-%open('Simul1C.slx')
+y_lin = lin_sim.get('y');
+y_nonlin = nonlin_sim.get('y');
+
+figure;
+hold on;
+xlim([0 100]);
+plot (y_lin);
+title("Linearized system - step response with w = W");
+hold off;
+
+figure;
+hold on;
+xlim([0 200]);
+plot (y_nonlin);
+title("Non linearized system - step response with w = W/8");
+hold off;
+
