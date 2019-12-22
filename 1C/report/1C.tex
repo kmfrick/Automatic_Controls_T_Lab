@@ -3,6 +3,7 @@
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage[italian]{cleveref}
+\usepackage[autostyle=false, style=english]{csquotes}
 \usepackage[italian]{babel}
 %\usepackage[nomarkers]{endfloat}
 \usepackage{graphicx}
@@ -13,6 +14,8 @@
 %\renewcommand{\efloatseparator}{\mbox{}}
 %\renewcommand{\efloatendlist}{\mbox{}}
 \newenvironment{eqsys}{\begin{equation}\begin{dcases}}{\end{dcases}\end{equation}}
+\graphicspath{{./images/}}
+\MakeOuterQuote{"}
 
 \DeclareMathOperator*{\sca}{\textrm{sca}}
 \title{Progetto Controlli Automatici T \\ 1C - Controllo del posizionamento di un link flessibile}
@@ -26,7 +29,7 @@ Nella nuova applicazione della azienda che commissiona il progetto si prevede di
 Questa però presenta il problema di una flessibilità non trascurabile intrinseca nei componenti meccanici utilizzati. 
 Ciò rende difficile il posizionamento dell’estremità non attuata in una posizione fissa desiderata.
 \subsection{Modello e linearizzazione}
-L’intera struttura in questione è modellizzata da \cref{eqn:model} ed è schematizzata come in \cref{fig:sys_schem}.
+L’intera struttura in questione è modellizzata dalla \cref{eqn:model} ed è schematizzata come in \cref{fig:sys_schem}.
 \begin{eqsys}       
     \label{eqn:model}
     \dot{x_1}  =  f_1 (x_1, x_2, x_3, x_4)  =  x_2 \\
@@ -54,10 +57,10 @@ L’intera struttura in questione è modellizzata da \cref{eqn:model} ed è sche
 La variabile $\theta$ in \cref{fig:sys_schem} viene descritta dallo stato $x_1$ e rappresenta l’angolo rispetto ad un piano di riferimento fisso che la massa concentrata del link traccia nel suo moto. $\theta_m$ (nelle equazioni $x_3$) rappresenta l’angolo di rotazione del motore, il cui input $u$ al sistema è la coppia applicata $\tau_m$. $K, \rho, L, M_p, J_p, I$ sono rispettivamente: la costante elastica del link, il suo coefficiente di attrito dinamico, la lunghezza, la massa concentrata sull’estremità non attuata, il momento d’inerzia della stessa massa e il momento d’inerzia del link equivalente visto dal punto di vista del motore.
 Ai fini dello sviluppo del controllo dell’impianto si vuole ottenere la struttura in \cref{fig:sys_cont}.
 
-Come prima analisi il sistema non lineare deve essere considerato nell’intorno di un punto di equilibrio, i cui valori $(\bar{x}, \bar{u})$ sono definiti nella \cref{table:ref_val} e linearizzato nello stesso intorno.
+Come prima analisi il sistema non lineare è stato considerato nell’intorno di un punto di equilibrio, i cui valori $(\bar{x}, \bar{u})$ sono definiti nella \cref{table:ref_val}, e linearizzato nello stesso intorno servendosi della \cref{eqn:linearization_calc} ottenendo la \cref{eqn:linearization}.
+Si è passato poi dalla rappresentazione nello spazio degli stati al dominio di Laplace utilizzando la trasformata di Laplace, ottenendo la funzione di trasferimento nella \cref{eqn:G}.
 
-
-{\begin{table}[h]
+{\begin{table}[h!]
 
     \centering 
 
@@ -111,38 +114,35 @@ C = (1, 0, 0, 0);
 D = (0);
 \end{equation}
 
-Il modello nella \cref{eqn:model} è stato quindi linearizzato nell’intorno di $(\bar{x}, \bar{u})$ servendosi della \cref{eqn:linearization_calc} ottenendo la \cref{eqn:linearization}.
-È necessario poi passare dalla rappresentazione nello spazio degli stati al dominio di Laplace utilizzando la trasformata di Laplace, ottenendo la funzione di trasferimento nella \cref{eqn:G}.
+
 
 \begin{equation}
     \label{eqn:G}
     G(s) = \frac{1000 (s+15)}{s^2 (s^2 + 30s + 450)}
 \end{equation}
-
-Per l’applicazione che l’azienda ha in mente si devono rispettare per il sistema linearizzato determinate caratteristiche:
-\begin{enumerate}
-    \item Errore a regime nullo con riferimento a gradino con ampiezza $w(t) = W \sca(t)$.
-    \item Per garantire una certa robustezza del sistema si deve avere un margine di fase $\phi_m \geq 45^\circ$.
-    \item Il sistema può accettare una sovraelongazione percentuale al massimo dell’1\% : $S\% \leq 1\%$.
-    \item Tempo di assestamento all'1\% $T_{a1} = 0.8$ (opzionalmente 0.4).
-    \item Abbattimento del rumore di 20 volte.
-\end{enumerate}
-
-Il rumore si fa sentire a $\omega_n > 200\hspace{0.5em} rad/s$ con ampiezza $A_n = 0.05$.
-    
-Dopo aver definito i parametri del sistema, calcolato le matrici linearizzate e la funzione di trasferimento, si definisce su MATLAB l’intervallo di frequenze che sarà mostrato nel diagramma di Bode: $\omega \in [10^{-2}, 10^5]$.
+Dopo aver definito su MATLAB i parametri del sistema, le matrici corrispondenti alla rappresentazione nello spazio degli stati del sistema linearizzato e la sua funzione di trasferimento, si è tracciato il diagramma di Bode del sistema in anello aperto, mostrato in \cref{fig:bode_G}, per $\omega \in [10^{-2}, 10^5]$.
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\textwidth]{bode_G}
-    \caption{Diagramma di Bode del sistema in anello aperto}
+    \includegraphics[width=\textwidth]{bode_G}
+    \caption{Diagramma di Bode del sistema in anello aperto.}
     \label{fig:bode_G}
 \end{figure}
+
+\subsection{Specifiche}
+Per l’applicazione che l’azienda ha in mente si devono rispettare per il sistema linearizzato determinate caratteristiche:
+\begin{enumerate}
+    \item Errore a regime nullo con riferimento a gradino con ampiezza $w(t) = W \sca(t)$.
+    \item Margine di fase $\phi_m \geq 45^\circ$.
+    \item Sovraelongazione percentuale $S\% \leq 1\%$.
+    \item Tempo di assestamento all'1\% $T_{a1} = 0.8\hspace{0.3em} [s]$ (opzionalmente $0.4 \hspace{0.3em}[s]$).
+    \item Abbattimento di 20 volte di un disturbo di misura che si fa sentire a $\omega_n > 200\hspace{0.3em} [rad/s]$ con ampiezza $A_n = 0.05$.
+\end{enumerate}
 
 \subsection{Requisiti sul margine di fase e sulla pulsazione critica}
 Il requisito sulla sovraelongazione si traduce in un requisito sul margine di fase che è maggiore di quello specificato, indicato nella \cref{eqn:phim}.
 Tuttavia, durante la sintesi del controllore si è notato che anche non rispettando questo requisito è possibile avere un sistema che rispetti le specifiche di sovraelongazione e abbia un tempo di assestamento ottimale.
-Nei diagrammi di Bode la fase proibita è indicata in blu.
+Nei diagrammi di Bode l'intervallo che comprende fasi non accettabili, pur rispettando le specifiche sul tempo di assestamento e sull'abbattimento del rumore, è indicato in blu.
 
 \begin{equation}
     \xi = \sqrt{\frac{\log(S_{max})^2}{(\pi^2+\log(S_{max})^2)}} \approx 0.826
@@ -158,7 +158,7 @@ Il requisito sul tempo di assestamento si traduce invece in un requisito sulla p
 Questa soglia è stata rispettata durante la sintesi del regolatore. 
 Nei diagrammi di Bode le "zone proibite" che non rispettano i requisiti sono indicate in verde; le specifiche ottimali usano un colore meno intenso.
 \begin{equation}
-    \omega_c \gtrsim \frac{460}{\phi_m T_a} \approx 7 (\approx 14 \textrm{ per le specifiche ottimali})
+    \omega_c \gtrsim \frac{460}{\phi_m T_a} \approx 7 \hspace{0.3em} [rad/s] (\approx 14 \hspace{0.3em} [rad/s] \textrm{ per le specifiche ottimali})
     \label{eqn:omega_c}
 \end{equation}
 
@@ -168,51 +168,76 @@ Per avere errore a regime nullo è necessario che $L(s)$ abbia un polo nell'orig
 
 Sono state progettati due regolatori: uno che rispetta le specifiche standard e uno, più complesso, che rispetta le specifiche ottimali.
 
-\subsection{Definizione}
-Il regolatore che rispetta le specifiche standard ha uno zero nell'origine che cancella un polo di $G(s)$ e garantisce un ampio margine di fase, un polo a $\omega = 10^5$ che garantisce la fisica realizzabilità e guadagno statico pari a $\mu_s = 0.23$.
+\subsection{Specifiche standard}
+Per rispettare le specifiche standard si è inserito uno zero nell'origine per cancellare un polo di $G(s)$ e avere un margine di fase pari ad almeno 83 gradi per pulsazioni critiche $\omega_c \le 10\hspace{0.3em} rad/s$.
+Si è quindi cercato un guadagno che permettesse di rispettare tale pulsazione critica, dato dalla \cref{eqn:gain_sta}.
+\begin{equation}
+\mu_d =  10^{-\frac{1}{20}|(s \cdot G)(j \bar{\omega}_c)|_{dB}} \approx 0.25, \bar{\omega}_c = 9.5 \hspace{0.3em} [rad/s]
+\label{eqn:gain_sta}
+\end{equation}
+Si è quindi inserito un polo a cinque decadi dall'origine per garantire la fisica realizzabilità.
 
-Il regolatore che rispetta le specifiche opzionali si serve di due reti anticipatrici, una con punto medio in $\omega_1 = 1/ (T_1 \sqrt{\alpha_1}) = 0.132$ e un'altra con punto medio in $\omega_2 = 1/ (T_2 \sqrt{\alpha_2}) \approx 2.7 \cdot 10^{-2}$.
-La prima rete anticipatrice ha una larghezza di banda di circa quattro decadi, con uno zero a $\omega_{z1} \approx -0.06$ e un polo a $\omega_{p1} \approx -10^3$. 
-La seconda rete anticipatrice ha una larghezza di banda di meno di una decade, con uno zero a $\omega_{z2} \approx -20$ e un polo a $\omega_{p2} \approx -70$.
+\subsection{Specifiche ottimali}
+Il regolatore che rispetta le specifiche opzionali si serve di due reti anticipatrici, una con punto medio in $\omega_1 = 1/ (T_1 \sqrt{\alpha_1}) = 0.132 \hspace{0.3em} [rad/s]$ e un'altra con punto medio in $\omega_2 = 1/ (T_2 \sqrt{\alpha_2}) \approx 2.7 \cdot 10^{-2} \hspace{0.3em} [rad/s]$.
+La prima rete anticipatrice ha una larghezza di banda di circa quattro decadi, con uno zero a $\omega_{z1} \approx -0.06 \hspace{0.3em} [rad/s]$ e un polo a $\omega_{p1} \approx -10^3 \hspace{0.3em} [rad/s]$. 
+La seconda rete anticipatrice ha una larghezza di banda di meno di una decade, con uno zero a $\omega_{z2} \approx -20\hspace{0.3em} [rad/s]$ e un polo a $\omega_{p2} \approx -70\hspace{0.3em} [rad/s]$.
 
-I parametri delle reti anticipatrici sono $T_1 = 17.42, \alpha_1 = 5.741 \cdot 10^{-5}, T_2 = 0.05, \alpha_2 = 0.286$.
+I parametri delle reti anticipatrici sono $T_1 = 17.42\hspace{0.3em} [rad/s], \alpha_1 = 5.741 \cdot 10^{-5}, T_2 = 0.05\hspace{0.3em} [rad/s], \alpha_2 = 0.286$.
 La seconda rete anticipatrice ha il polo e lo zero più vicini tra loro per evitare di aumentare troppo l'ampiezza e rispettare le specifiche sull'abbattimento del rumore.
 
-Il guadagno statico di questo regolatore è $\mu_s = 3.4 \cdot 10^{-2}$.
+Il guadagno di questo regolatore è $\mu_d = 3.4 \cdot 10^{-2}$.
 
 La funzione di trasferimento del regolatore standard è data dalla \cref{eqn:R_sta}, mentre quella del regolatore più complesso è data dalla \cref{eqn:R_opt}.
 I diagrammi di Bode sono mostrati rispetrivamente in \cref{fig:bode_L_sta} e in \cref{fig:bode_L}.
 \begin{equation}
     \label{eqn:R_sta}
-    R(s) = \frac{23000 s}{100000 + s}
+    R_{sta}(s) = \frac{ 0.2456 s}{ 1+  10^{-5} s}
 \end{equation}
 \begin{equation}
     \label{eqn:R_opt}
-    R(s) = \frac{2070.7 (s+20) (s+0.05741)}{(s+999.9) (s+69.93)}
+    R_{opt}(s) = \frac{0.02961 s^2 + 0.594 s + 0.034}{ 1.43 \cdot 10^{-5} s^2 + 0.0153 s + 1}
 \end{equation}
-\begin{figure}[h]
-\begin{subfigure}{0.49\textwidth}
+
+\begin{figure}[h!]
     \centering
     \includegraphics[width=\textwidth]{bode_L_sta}
     \caption{Diagramma di Bode del sistema con regolatore che rispetta le specifiche standard.}
     \label{fig:bode_L_sta}
-\end{subfigure}
-~
-\begin{subfigure}{0.49\textwidth}
+\end{figure}
+
+\begin{figure}[h!]
     \centering
     \includegraphics[width=\textwidth]{bode_L}
     \caption{Diagramma di Bode del sistema con regolatore che rispetta le specifiche ottimali.}
     \label{fig:bode_L}
-\end{subfigure}
 \end{figure}
+
 \section{Risposta del sistema in anello chiuso con regolatore}
-Entrambi i regolatori non presentano sovraelongazione quando applicate al sistema linearizzato.
-Il regolatore semplice garantisce un tempo di assestamento all'1\% pari a 0.5387 secondi, mentre il regolatore ottimale garantisce un tempo di assestamento all'1\% pari a 0.3817 secondi (misurato con la funzione MATLAB \texttt{stepinfo}).
+Il regolatore standard non presenta sovraelongazione quando applicato al sistema linearizzato, mentre quello ottimale presenta una sovraelongazione percentuale dello 0.23\% circa, rispettando le specifiche.
+Il regolatore semplice garantisce un tempo di assestamento all'1\% pari a 0.5045 secondi, mentre il regolatore ottimale garantisce un tempo di assestamento all'1\% pari a 0.3817 secondi (misurato con la funzione MATLAB \texttt{stepinfo}).
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.55\textwidth]{step}
-    \caption{Risposta allo scalino del sistema in anello chiuso con regolatore standard}
-    \label{fig:step_standard}
+    \includegraphics[width=0.8\textwidth]{step_opt}
+    \caption{Risposta allo scalino del sistema in anello chiuso con regolatore ottimale.}
+    \label{fig:step_opt}
+    \end{figure}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{step_sta}
+    \caption{Risposta allo scalino del sistema in anello chiuso con regolatore standard.}
+    \label{fig:step_sta}
+\end{figure}
+
+\subsection{Studio del luogo delle radici}
+Dallo studio del luogo delle radici mostrato in \cref{fig:rlocus} si evince che i poli nell'origine tendono a diventare complessi coniugati a parte reale positiva per valori alti della costante di trasferimento. 
+Ciò significa che aumentando il guadagno o inserendo zeri reali o poli complessi coniugati ad alte frequenze il sistema diventa instabile.
+Con il regolatore progettato, tuttavia, il guadagno non è abbastanza alto perché ciò accada.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.65\textwidth]{rlocus}
+    \caption{Luogo delle radici del sistema con regolatore ottimale.}
+    \label{fig:rlocus}
 \end{figure}
 
 \subsection{Simulink}
@@ -236,25 +261,38 @@ La risposta allo scalino del sistema linearizzato ricalca quella ottenuta con la
 La risposta allo scalino del sistema non linearizzato mostra che è possibile ottenere stabilità solamente con valori di ingresso a scalino inferiori a $w = \frac{W}{8} \sca(t)$. 
 \begin{figure}[h!]
     \centering
-\begin{subfigure}[t]{0.3\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{step_lin}
-    \caption{Risposta allo scalino del sistema linearizzato con ingresso $w = W \sca (t)$.}
-    \label{fig:step_sim_lin}
-\end{subfigure}
-~
-\begin{subfigure}[t]{0.3\textwidth}
+\begin{subfigure}[t]{0.48\textwidth}
     \centering
     \includegraphics[width=\textwidth]{step_nonlin_short}
     \caption{Risposta allo scalino del sistema non linearizzato con ingresso $w = \frac{W}{8} \sca (t)$.}
     \label{fig:step_sim_nonlin}
 \end{subfigure}
 ~
-\begin{subfigure}[t]{0.3\textwidth}
+\begin{subfigure}[t]{0.48\textwidth}
     \centering
     \includegraphics[width=\textwidth]{step_nonlin_long}
     \caption{Risposta allo scalino del sistema non linearizzato con ingresso $w = \frac{W}{8} \sca (t)$ che mostra la lunga coda di assestamento.}
     \label{fig:step_sim_nonlin_long}
 \end{subfigure}
 \end{figure}
+\begin{figure}
+\centering
+\begin{subfigure}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{step_small_nonlin_short}
+    \caption{Risposta allo scalino del sistema non linearizzato con ingresso $w = \frac{W}{100} \sca (t)$.}
+    \label{fig:step_small_sim_nonlin_short}
+\end{subfigure}
+~
+\begin{subfigure}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{step_small_nonlin_long}
+    \caption{Risposta allo scalino del sistema non linearizzato con ingresso $w = \frac{W}{100} \sca (t)$. La coda di assestamento non è osservabile per ingressi più piccoli.}
+    \label{fig:step_small_sim_nonlin_long}
+\end{subfigure}
+\end{figure}
+\section{Conclusioni}
+Nonostante le ottime prestazioni che il regolatore ottimale riesce a raggiungere sul sistema linearizzato, il sistema reale è resistente solo a sollecitazioni otto volte minori del riferimento e, come mostrato nella \cref{fig:step_sim_nonlin_long}, presenta code di assestamento molto lunghe che non si osservano solo con sollecitazioni cento volte minori del riferimento (si veda la \cref{fig:step_small_sim_nonlin_long}). 
+Le specifiche sulla sovraelongazione sembrano richiedere un margine di fase più ampio di quello fornito dal regolatore ottimale, nondimeno si osserva come quest'ultimo presenti una sovraelongazione percentuale che rispetta i requisiti.
+Queste criticità mettono in evidenza l'entità delle approssimazioni utilizzate durante la sintesi del sistema di controllo e dovrebbero essere portate all'attenzione dell'azienda che commissiona il progetto e attentamente esaminate prima della fisica realizzazione e installazione del regolatore.
 \end{document}
