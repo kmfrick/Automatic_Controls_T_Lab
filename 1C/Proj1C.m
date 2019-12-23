@@ -123,7 +123,8 @@ hold on;
 step(F_opt);
 stepinfo(F_opt, 'SettlingTimeThreshold',0.01)
 
-%% Simulink (solo con regolatore ottimale)
+%% Simulink
+R_sim = R_opt;
 w_lin = W;
 w_nonlin = W/8;
 lin_sim = sim('Simul1C');
