@@ -45,6 +45,16 @@ s = tf('s');
 G_mat = tf(N, D);
 G = 1000 * (s + 15) / (s^2 * (s^2 + 30 * s + 450));
 
+%% Diagramma di Bode del sistema in anello aperto
+figure;
+hold on;
+patch([omega_plot_min,omega_c_sta,omega_c_sta, omega_plot_min],[0, 0, -300, -300],'green','FaceAlpha',0.3,'EdgeAlpha',0);
+patch([omega_plot_min,omega_c_opt,omega_c_opt, omega_plot_min],[0, 0, -300, -300],'green','FaceAlpha',0.5,'EdgeAlpha',0);
+patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.5,'EdgeAlpha',0);
+[Mag, phase, omega] = bode(G, {omega_plot_min, omega_plot_max});
+margin(Mag, phase, omega); grid on;
+patch([omega_c_opt,omega_n, omega_n, omega_c_opt], [-180+phi_m,-180+phi_m, -360, -360], 'blue','FaceAlpha',0.5,'EdgeAlpha',0);
+
 %% Definizione dell'intervallo di frequenze del diagramma di Bode
 omega_plot_min=10^(-2);
 omega_plot_max=10^5;
@@ -52,94 +62,69 @@ omega_plot_max=10^5;
 %% Requisiti sul margine di fase
 xi = sqrt(log(S_max)^2/(pi^2+log(S_max)^2));
 phi_m = xi * 100;
-omega_c_opt = 460 / (phi_m * T_a0);
-omega_c_stand = 460 / (phi_m * T_a1);
+omega_c_sta = 460 / (phi_m * T_a0);
+omega_c_opt = 460 / (phi_m * T_a1);
 
-%% Definizione del regolatore per specifiche standard
+%% Definizione del regolatore
 % Zero nell'origine per alzare la fase a valori accettabili
-% margin(s * G); grid on;
-% Si ha margine di fase > 83 gradi per omega < 10, quindi si
-% cerca di ottenere una pulsazione critica di 9.5 [rad/s]
-% alzando il guadagno
-gain_sta = round(10^(-log10(abs(evalfr(s * G, 9.5 * 1i)))), 2);
+%figure;
+%hold on;
+%patch([omega_plot_min,omega_c_sta,omega_c_sta, omega_plot_min],[0, 0, -300, -300],'green','FaceAlpha',0.3,'EdgeAlpha',0);
+%patch([omega_plot_min,omega_c_opt,omega_c_opt, omega_plot_min],[0, 0, -300, -300],'green','FaceAlpha',0.5,'EdgeAlpha',0);
+%patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.5,'EdgeAlpha',0);
+%[Mag, phase, omega] = bode(s * G, {omega_plot_min, omega_plot_max});
+%margin(Mag, phase, omega); grid on;
+%patch([omega_c_opt,omega_n, omega_n, omega_c_opt], [-180+phi_m,-180+phi_m, -360, -360], 'blue','FaceAlpha',0.5,'EdgeAlpha',0);
+% Si ha margine di fase > 83 gradi per omega < 10, ma in realtà questa è
+% una sovrastima. Si cerca quindi di avere una pulsazione critica > 15 per
+% rispettare le specifiche ottimali
+gain = round(10^(-log10(abs(evalfr(s * G, 16 * 1i)))), 2);
 % Si aggiunge un polo lontano dall'origine per la fisica realizzabilità
-R_sta = gain_sta * s / (1 + s * 1e-5);
-L_sta = R_sta * G;
-F_sta = L_sta / (1 + L_sta);
+R = gain * s / (1 + s * 1e-4);
+L_ = R * G;
+F = L_ / (1 + L_);
 
-%% Definizione del regolatore ottimale
-gain_opt = 34e-3;
-T_1 = 17;
-alpha_1 = 57e-6;
-T_2 = 0.05;
-alpha_2 = 0.3;
-R_lead_1 = (1  + T_1 * s) / (1 + alpha_1 * T_1 * s);
-R_lead_2 = (1  + T_2 * s) / (1 + alpha_2 * T_2 * s);
-R_opt = gain_opt * R_lead_1 * R_lead_2;
-L_opt = R_opt * G;
-F_opt = L_opt / (1 + L_opt);
-
-%% Diagramma di Bode del sistema in anello aperto
+%% Diagramma di Bode del sistema con regolatore
 figure;
 hold on;
-patch([omega_plot_min,omega_c_opt,omega_c_opt, omega_plot_min],[0, 0, -300, -300],'green','FaceAlpha',0.3,'EdgeAlpha',0);
-patch([omega_plot_min,omega_c_stand,omega_c_stand, omega_plot_min],[0, 0, -300, -300],'green','FaceAlpha',0.5,'EdgeAlpha',0);
+patch([omega_plot_min,omega_c_sta,omega_c_sta, omega_plot_min],[0, 0, -200, -200],'green','FaceAlpha',0.3,'EdgeAlpha',0);
+patch([omega_plot_min,omega_c_opt,omega_c_opt, omega_plot_min],[0, 0, -200, -200],'green','FaceAlpha',0.5,'EdgeAlpha',0);
 patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.5,'EdgeAlpha',0);
-[Mag, phase, omega] = bode(G, {omega_plot_min, omega_plot_max});
-margin(Mag, phase, omega); grid on;
-patch([omega_c_stand,omega_n, omega_n, omega_c_stand], [-180+phi_m,-180+phi_m, -360, -360], 'blue','FaceAlpha',0.5,'EdgeAlpha',0);
-
-%% Diagramma di Bode del sistema con regolatore standard
-figure;
-hold on;
-patch([omega_plot_min,omega_c_opt,omega_c_opt, omega_plot_min],[0, 0, -200, -200],'green','FaceAlpha',0.3,'EdgeAlpha',0);
-patch([omega_plot_min,omega_c_stand,omega_c_stand, omega_plot_min],[0, 0, -200, -200],'green','FaceAlpha',0.5,'EdgeAlpha',0);
-patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.5,'EdgeAlpha',0);
-[Mag, phase, omega] = bode(L_sta, {omega_plot_min, omega_plot_max});
+[Mag, phase, omega] = bode(L_, {omega_plot_min, omega_plot_max});
 margin(Mag, phase, omega);  
 grid on;
-patch([omega_c_stand,omega_n, omega_n, omega_c_stand], [-180+phi_m,-180+phi_m, -360, -360], 'blue','FaceAlpha',0.5,'EdgeAlpha',0);
+patch([omega_c_opt,omega_n, omega_n, omega_c_opt], [-180+phi_m,-180+phi_m, -360, -360], 'blue','FaceAlpha',0.5,'EdgeAlpha',0);
 
-%% Diagramma di Bode del sistema con regolatore ottimale
+%% Risposta allo scalino del sistema in anello chiuso con regolatore
 figure;
 hold on;
-patch([omega_plot_min,omega_c_opt,omega_c_opt, omega_plot_min],[0, 0, -200, -200],'green','FaceAlpha',0.3,'EdgeAlpha',0);
-patch([omega_plot_min,omega_c_stand,omega_c_stand, omega_plot_min],[0, 0, -200, -200],'green','FaceAlpha',0.5,'EdgeAlpha',0);
-patch([omega_n,omega_plot_max,omega_plot_max,omega_n],[-B_n_dB,-B_n_dB,100,100],'red','FaceAlpha',0.5,'EdgeAlpha',0);
-[Mag, phase, omega] = bode(L_opt, {omega_plot_min, omega_plot_max});
-margin(Mag, phase, omega);
+step(F);
 grid on;
-patch([omega_c_stand,omega_n, omega_n, omega_c_stand], [-180+phi_m,-180+phi_m, -360, -360], 'blue','FaceAlpha',0.5,'EdgeAlpha',0);
+stepinfo(F, 'SettlingTimeThreshold',0.01)
 
-%% Risposta allo scalino del sistema in anello chiuso con regolatore standard
-figure;
-hold on;
-step(F_sta);
-stepinfo(F_sta, 'SettlingTimeThreshold',0.01)
-
-%% Risposta allo scalino del sistema in anello chiuso con regolatore ottimale
-figure;
-hold on;
-step(F_opt);
-stepinfo(F_opt, 'SettlingTimeThreshold',0.01)
 
 %% Luogo delle radici
-rlocus(L_opt);
+figure;
+hold on;
+sigma_max = 4.6/T_a0;
+rlocus(L_);
+xlim([-30 10]);
+ylim([-30 30]);
+patch([-30 -30 -sigma_max -sigma_max], [-100 100 100 -100], 'green','FaceAlpha',0.5,'EdgeAlpha',0);
+patch([0 -100*xi -100*xi], [0 100*sin(acos(xi)) -100*sin(acos(xi))], 'blue','FaceAlpha',0.5,'EdgeAlpha',0);
+scatter(real(pole(F)), imag(pole(F)), 'filled')
+legend("Root locus", "Settling time req", "Overshoot req", "Closed loop poles");
+title(["Root locus" "(Physical feasibility pole not shown)"]);
 
 %% Simulink
-R_sim = R_opt;
+R_sim = R;
 w_lin = W;
-w_nonlin = W / 8;
-w_nonlin_small = W / 100;
+w_nonlin = W / 1000;
 lin_sim = sim('Simul1C');
 nonlin_sim = sim('NonLin1C');
 
 y_lin = lin_sim.get('y');
 y_nonlin = nonlin_sim.get('y');
-
-w_nonlin = w_nonlin_small;
-nonlin_sim_small = sim('NonLin1C');
-y_nonlin_small = nonlin_sim_small.get('y');
 
 figure;
 hold on;
@@ -152,26 +137,12 @@ figure;
 hold on;
 xlim([0 4]);
 plot (y_nonlin);
-title("Non linearized system - step response with w = W/8");
+title("Non linearized system - step response with w = W/1000");
 hold off;
 
 figure;
 hold on;
 xlim([0 80]);
 plot (y_nonlin);
-title("Non linearized system - step response with w = W/8");
-hold off;
-
-figure;
-hold on;
-xlim([0 4]);
-plot (y_nonlin_small);
-title("Non linearized system - step response with w = W/100");
-hold off;
-
-figure;
-hold on;
-xlim([0 80]);
-plot (y_nonlin_small);
-title("Non linearized system - step response with w = W/100");
+title("Non linearized system - step response with w = W/1000");
 hold off;

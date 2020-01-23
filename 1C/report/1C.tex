@@ -204,85 +204,56 @@ Nei diagrammi di Bode le "zone proibite" che non rispettano i requisiti sono ind
 
 Per avere errore a regime nullo è necessario che $L(s)$ abbia un polo nell'origine, ma $G(s)$ ne ha due, che abbassano di molto la fase: si progetta quindi $R(s)$ in modo che abbia uno zero vicino all'origine che cancelli il polo.
 
-Sono state progettati due regolatori: uno che rispetta le specifiche standard e uno, più complesso, che rispetta le specifiche ottimali.
-
 \subsection{Specifiche standard}
 Per rispettare le specifiche standard si è inserito uno zero nell'origine per cancellare un polo di $G(s)$ e avere un margine di fase pari ad almeno 83 gradi per pulsazioni critiche $\omega_c \le 10\hspace{0.3em} rad/s$.
-Si è quindi cercato un guadagno che permettesse di rispettare tale pulsazione critica, dato dalla \cref{eqn:gain_sta}.
+Si è quindi cercato un guadagno che permettesse di rispettare tale pulsazione critica, dato dalla \cref{eqn:gain}.
 \begin{equation}
-\mu_d =  10^{-\frac{1}{20}|(s \cdot G)(j \bar{\omega}_c)|_{dB}} \approx 0.25, \bar{\omega}_c = 9.5 \hspace{0.3em} [rad/s]
-\label{eqn:gain_sta}
+\mu_d =  10^{-\frac{1}{20}|(s \cdot G)(j \bar{\omega}_c)|_{dB}} \approx 0.38, \bar{\omega}_c = 16 \hspace{0.3em} [rad/s]
+\label{eqn:gain}
 \end{equation}
-Si è quindi inserito un polo a cinque decadi dall'origine per garantire la fisica realizzabilità.
-
-\subsection{Specifiche ottimali}
-Il regolatore che rispetta le specifiche opzionali si serve di due reti anticipatrici, una con punto medio in $\omega_1 = 1/ (T_1 \sqrt{\alpha_1}) \approx 7.8\hspace{0.3em} [rad/s]$ e un'altra con punto medio in $\omega_2 = 1/ (T_2 \sqrt{\alpha_2}) \approx 36.5 \hspace{0.3em} [rad/s]$.
-La prima rete anticipatrice ha una larghezza di banda di circa quattro decadi, con uno zero a $\omega_{z1} \approx 0.06 \hspace{0.3em} [rad/s]$ e un polo a $\omega_{p1} \approx 10^3 \hspace{0.3em} [rad/s]$.
-La seconda rete anticipatrice ha una larghezza di banda di meno di una decade, con uno zero a $\omega_{z2} \approx 20\hspace{0.3em} [rad/s]$ e un polo a $\omega_{p2} \approx 67\hspace{0.3em} [rad/s]$.
-
-I parametri delle reti anticipatrici sono $T_1 = 17\hspace{0.3em} [rad/s], \alpha_1 = 5.7 \cdot 10^{-5}, T_2 = 0.05\hspace{0.3em} [rad/s], \alpha_2 = 0.3$.
-La seconda rete anticipatrice ha il polo e lo zero più vicini tra loro per evitare di aumentare troppo l'ampiezza e rispettare le specifiche sull'abbattimento del rumore.
-
-Il guadagno di questo regolatore è $\mu_d = 34 \cdot 10^{-3}$.
-
-La funzione di trasferimento del regolatore standard è data dalla \cref{eqn:R_sta}, mentre quella del regolatore più complesso è data dalla \cref{eqn:R_opt}.
-I diagrammi di Bode sono mostrati rispetrivamente in \cref{fig:bode_L_sta} e in \cref{fig:bode_L}.
+Si è quindi inserito un polo a quattro decadi dall'origine per garantire la fisica realizzabilità.
+Si è osservato che, nonostante non si stessero rispettando le specifiche sul margine di fase, il sistema presenta comunque una sovraelongazione estremamente ridotta.
+La funzione di trasferimento del regolatore è data dalla \cref{eqn:R}.
+Il diagramma di Bode è mostrato in \cref{fig:bode_L}.
 \begin{equation}
-    \label{eqn:R_sta}
-    R_{sta}(s) = \frac{ 0.25 s}{ 1+  10^{-5} s}
+    \label{eqn:R}
+    R(s) = \frac{ 0.38 s}{ 1+  10^{-4} s}
 \end{equation}
-\begin{equation}
-    \label{eqn:R_opt}
-    R_{opt}(s) = 0.034 \frac{1 + 17s}{1 + 969 \cdot 10^-6 s} \frac{1 + 0.05 s}{1 + 0.015 s}
-\end{equation}
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=\textwidth]{bode_L_sta}
-    \caption{Diagramma di Bode del sistema con regolatore che rispetta le specifiche standard.}
-    \label{fig:bode_L_sta}
-\end{figure}
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=\textwidth]{bode_L}
-    \caption{Diagramma di Bode del sistema con regolatore che rispetta le specifiche ottimali.}
+    \caption{Diagramma di Bode del sistema con regolatore.}
     \label{fig:bode_L}
 \end{figure}
 
+
 \section{Risposta del sistema in anello chiuso con regolatore}
-Né il regolatore standard né quello ottimale presentano sovraelongazione quando applicati al sistema linearizzato.
-Il regolatore semplice garantisce un tempo di assestamento all'1\% pari a 609 millisecondi, mentre il regolatore ottimale garantisce un tempo di assestamento all'1\% pari a 385 millisecondi (misurato con la funzione MATLAB \texttt{stepinfo}).
+Il regolatore garantisce un tempo di assestamento all'1\% pari a 393 millisecondi (misurato con la funzione MATLAB \texttt{stepinfo}).
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\textwidth]{step_opt}
-    \caption{Risposta allo scalino del sistema in anello chiuso con regolatore ottimale.}
-    \label{fig:step_opt}
-    \end{figure}
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.8\textwidth]{step_sta}
-    \caption{Risposta allo scalino del sistema in anello chiuso con regolatore standard.}
-    \label{fig:step_sta}
+    \includegraphics[width=0.8\textwidth]{step}
+    \caption{Risposta allo scalino del sistema in anello chiuso con regolatore.}
+    \label{fig:step}
 \end{figure}
 
 \subsection{Studio del luogo delle radici}
 Dallo studio del luogo delle radici mostrato in \cref{fig:rlocus} si evince che i poli nell'origine tendono a diventare complessi coniugati a parte reale positiva per valori alti della costante di trasferimento.
 Ciò significa che aumentando il guadagno il sistema diventa instabile.
 Con il regolatore progettato, tuttavia, il guadagno non è abbastanza alto perché ciò accada.
+Si osserva inoltre che i poli dominanti rispettano i requisiti sulla parte reale dati dalle specifiche sul tempo di assestamento, ma non quelli sullo smorzamento dati dalle specifiche sulla sovraelongazione.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.65\textwidth]{rlocus}
-    \caption{Luogo delle radici del sistema con regolatore ottimale.}
+    \caption{Luogo delle radici del sistema con regolatore.}
     \label{fig:rlocus}
 \end{figure}
 
 \subsection{Simulink}
 Il sistema è stato simulato, sia nella sua versione linearizzata che in quella non linearizzata, servendosi del pacchetto software Simulink.
 Il sistema non linearizzato è stato realizzato con un blocco "MATLAB Function" che calcola le espressioni nella \cref{eqn:model}, le passa a quattro blocchi integratori e riceve in ingresso il risultato.
-Il regolatore ottimale riesce a ottenere buone prestazioni, evidenziate nelle \cref{fig:sim_nonlin} e \cref{fig:step_sim_nonlin}, anche nel sistema non linearizzato.
-Si osserva tuttavia che quest'ultimo presenta notevoli divergenze dal sistema linearizzato per i valori di ingresso a scalino richiesti dalle specifiche, rimanendo stabile solo con sollecitazioni almeno otto volte meno intense.
+Si osserva tuttavia che il sistema non linearizzato presenta notevoli divergenze dal sistema linearizzato per i valori di ingresso a scalino richiesti dalle specifiche, rimanendo stabile solo con sollecitazioni almeno mille volte meno intense.
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.7\textwidth]{Simul1C.pdf}
@@ -296,42 +267,16 @@ Si osserva tuttavia che quest'ultimo presenta notevoli divergenze dal sistema li
     \label{fig:sim_nonlin}
 \end{figure}
 La risposta allo scalino del sistema linearizzato ricalca quella ottenuta con la funzione \texttt{step} di MATLAB.
-La risposta allo scalino del sistema non linearizzato mostra che è possibile ottenere stabilità solamente con valori di ingresso a scalino inferiori a $w = \frac{W}{8} \sca(t)$.
+La risposta allo scalino del sistema non linearizzato mostra che è possibile ottenere stabilità solamente con valori di ingresso a scalino inferiori a $w = \frac{W}{1000} \sca(t)$.
 \section{Conclusioni}
-Nonostante le ottime prestazioni che il regolatore ottimale riesce a raggiungere sul sistema linearizzato, il sistema reale è resistente solo a sollecitazioni otto volte minori del riferimento e, come mostrato nella \cref{fig:step_sim_nonlin_long}, presenta code di assestamento molto lunghe che non si osservano solo con sollecitazioni cento volte minori del riferimento (si veda la \cref{fig:step_small_sim_nonlin_long}).
+Nonostante le buone prestazioni ottenute dal regolatore sul sistema linearizzato, il sistema reale è resistente solo a sollecitazioni mille volte minori del riferimento.
 Le specifiche sulla sovraelongazione sembrano richiedere un margine di fase più ampio di quello fornito dal regolatore ottimale, nondimeno si osserva come quest'ultimo non presenti sovraelongazione.
 Queste criticità mettono in evidenza l'entità delle approssimazioni utilizzate durante la sintesi del sistema di controllo e dovrebbero essere portate all'attenzione dell'azienda che commissiona il progetto e attentamente esaminate prima della fisica realizzazione e installazione del regolatore.
 \begin{figure}[h]
     \centering
-\begin{subfigure}[t]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{step_nonlin_short}
-    \caption{Risposta allo scalino del sistema non linearizzato con ingresso $w = \frac{W}{8} \sca (t)$.}
-    \label{fig:step_sim_nonlin}
-\end{subfigure}
-~
-\begin{subfigure}[t]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{step_nonlin_long}
-    \caption{Risposta allo scalino del sistema non linearizzato con ingresso $w = \frac{W}{8} \sca (t)$ che mostra la lunga coda di assestamento.}
+    \includegraphics[width=0.7\textwidth]{step_nonlin_long}
+    \caption{Risposta allo scalino del sistema non linearizzato con ingresso $w = \frac{W}{1000} \sca (t)$.}
     \label{fig:step_sim_nonlin_long}
-\end{subfigure}
-\end{figure}
-\begin{figure}[h]
-\centering
-\begin{subfigure}[t]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{step_small_nonlin_short}
-    \caption{Risposta allo scalino del sistema non linearizzato con ingresso $w = \frac{W}{100} \sca (t)$.}
-    \label{fig:step_small_sim_nonlin_short}
-\end{subfigure}
-~
-\begin{subfigure}[t]{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{step_small_nonlin_long}
-    \caption{Risposta allo scalino del sistema non linearizzato con ingresso $w = \frac{W}{100} \sca (t)$. La coda di assestamento non è osservabile per ingressi più piccoli.}
-    \label{fig:step_small_sim_nonlin_long}
-\end{subfigure}
 \end{figure}
 
 \end{document}
